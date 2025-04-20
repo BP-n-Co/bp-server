@@ -1,0 +1,44 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: databasator
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    volumes:
+      - database:/var/lib/mysql
+  
+
+  migrator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: migrator
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+    depends_on:
+      - mysql
+    entrypoint: ["/bin/bash", "/app/docker/migrate-db.sh"]
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      PYTHONPATH: "/app"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      UVICORN_MODE_DEBUG: False
+    depends_on:
+      - migrator
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    entrypoint: ["python3", "-m", "src.main"]
+
+volumes:
+  database:
