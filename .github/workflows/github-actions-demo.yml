@@ -1,9 +1,6 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       print_tags:
@@ -13,17 +10,12 @@ on:
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
-    if: ${{ inputs.print_tags }}
     steps:
       - name: Determine source
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event.workflow_dispatch
         run: echo "Workflow started manually"
-      - name: Determine print_tags
-        id: print_tags
-        run: |
-          echo "print_tags=${{ github.event_name == 'workflow_dispatch' && inputs.print_tags || 'true' }}" >> $GITHUB_OUTPUT
       - name: Print tags block (conditional)
-        if: steps.print_tags.outputs.print_tags == 'true'
+        if: ${{ inputs.print_tags }}
         run: echo "✅ print_tags is true, running tag print logic..."
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
