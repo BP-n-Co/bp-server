@@ -41,6 +41,9 @@ jobs:
       #     docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
       #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       #     echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      -name: Verif
+        run:
+          echo ${{ env.ECS_TASK_DEFINITION }}
 
       - name: Run ECS migration task
         run: |
@@ -50,33 +53,34 @@ jobs:
             --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
-            --overrides '{ \
-              "containerOverrides": [ \
-                { \
-                  "name": "migration-container", \
-                  "environment": [ \
-                    { \
-                      "name": "MYSQL_USERNAME", \
-                      "value": "${{ secrets.MYSQL_USERNAME_MIGRATION }}" \
-                    }, \
-                    { \
-                      "name": "MYSQL_PASSWORD", \
-                      "value": "${{ secrets.MYSQL_PASSWORD_MIGRATION }}" \
-                    }, \
-                    { \
-                      "name": "MYSQL_HOST", \
-                      "value": "${{ secrets.MYSQL_HOST }}" \
-                    }, \
-                    { \
-                      "name": "MYSQL_PORT", \
-                      "value": "3306" \
-                    }, \
-                    { \
-                      "name": "MYSQL_DATABASE", \
-                      "value": "bp_co" \
-                    } \
-                  ] \
-                } \
-              ], \
-              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" \
-            }'
+            -- overrides '{"executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role"}'
+            # --overrides '{ \
+            #   "containerOverrides": [ \
+            #     { \
+            #       "name": "migration-container", \
+            #       "environment": [ \
+            #         { \
+            #           "name": "MYSQL_USERNAME", \
+            #           "value": "${{ secrets.MYSQL_USERNAME_MIGRATION }}" \
+            #         }, \
+            #         { \
+            #           "name": "MYSQL_PASSWORD", \
+            #           "value": "${{ secrets.MYSQL_PASSWORD_MIGRATION }}" \
+            #         }, \
+            #         { \
+            #           "name": "MYSQL_HOST", \
+            #           "value": "${{ secrets.MYSQL_HOST }}" \
+            #         }, \
+            #         { \
+            #           "name": "MYSQL_PORT", \
+            #           "value": "3306" \
+            #         }, \
+            #         { \
+            #           "name": "MYSQL_DATABASE", \
+            #           "value": "bp_co" \
+            #         } \
+            #       ] \
+            #     } \
+            #   ], \
+            #   "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" \
+            # }'
