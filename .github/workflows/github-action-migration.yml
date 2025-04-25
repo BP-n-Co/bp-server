@@ -59,7 +59,7 @@ jobs:
             AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID}}
 
       - name: Check Rendered Task Definition
-        run: echo "${{ steps.task-def.outputs.task-definition }}"
+        run: cat "${{ steps.task-def.outputs.task-definition }}"
 
       - name: Run ECS migration task
         run: |
