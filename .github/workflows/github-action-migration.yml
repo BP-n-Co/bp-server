@@ -78,5 +78,5 @@ jobs:
                   ]
                 }
               ],
-              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/new-execution-role"
+              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role"
             }'
