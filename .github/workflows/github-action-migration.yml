@@ -7,7 +7,7 @@ env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: bp-n-co/ecr-repo
   ECS_CLUSTER: BP-Cluster
-  ECS_TASK_DEFINITION: migration-task:4
+  ECS_TASK_DEFINITION: migration-task:5
 
 jobs:
   deploy:
@@ -40,7 +40,7 @@ jobs:
       #     # be deployed to ECS.
       #     docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
       #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      #     echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
       # - name: Verif
       #   run: echo ${{ env.ECS_TASK_DEFINITION }}
 
@@ -58,7 +58,7 @@ jobs:
                   "name": "migration-container", 
                   "environment": [ 
                     { 
-                      "name": "MYSQL_USERNAME", 
+                      "name": "MYSQL_USER", 
                       "value": "${{ secrets.MYSQL_USERNAME_MIGRATION }}" 
                     }, 
                     { 

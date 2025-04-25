@@ -37,7 +37,6 @@ DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
     f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
 )
-print(DATABASE_URL)
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 
