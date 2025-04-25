@@ -57,11 +57,11 @@ jobs:
                   "environment": [
                     {
                       "name": "MYSQL_USERNAME",
-                      "value": "${{ secrets.MYSQL_USERNAME }}"
+                      "value": "${{ secrets.MYSQL_USERNAME_MIGRATION }}"
                     },
                     {
                       "name": "MYSQL_PASSWORD",
-                      "value": "${{ secrets.MYSQL_PASSWORD }}"
+                      "value": "${{ secrets.MYSQL_PASSWORD_MIGRATION }}"
                     },
                     {
                       "name": "MYSQL_HOST",
