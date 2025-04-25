@@ -55,6 +55,7 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID}}
 
       - name: Run ECS migration task
