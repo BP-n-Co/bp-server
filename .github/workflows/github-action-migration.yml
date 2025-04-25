@@ -66,6 +66,6 @@ jobs:
           aws ecs run-task \
             --cluster ${{ env.ECS_CLUSTER }} \
             --launch-type EC2 \
-            --task-definition ${{ steps.task-def.outputs.task-definition }} \
+            --cli-input-json file://${{ steps.task-def.outputs.task-definition }} \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}"
