@@ -50,7 +50,7 @@ jobs:
             --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
-            --overrides '{
+            --overrides '{ \
               "containerOverrides": [ \
                 { \
                   "name": "migration-container", \
