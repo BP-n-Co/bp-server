@@ -46,7 +46,7 @@ jobs:
         run: |
           aws ecs run-task \
             --cluster ${{ env.ECS_CLUSTER }} \
-            --launch-type EC2 \
+            --capacity-provider-strategy "arn:aws:autoscaling:ap-northeast-1:${{ secrets.AWS_ACCOUNT_ID }}:autoScalingGroup:e8dbfeb5-7e0d-41ce-8b59-ed5ee55fa74c:autoScalingGroupName/Infra-ECS-Cluster-BP-Cluster-b9b923ec-ECSAutoScalingGroup-cXYciBLolzif"
             --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
