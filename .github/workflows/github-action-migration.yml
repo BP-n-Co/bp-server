@@ -7,8 +7,7 @@ env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: bp-n-co/ecr-repo
   ECS_CLUSTER: BP-Cluster
-  ECS_TASK_DEFINITION: .aws/migration-task.json
-  CONTAINER_NAME: migration-container
+  ECS_TASK_DEFINITION: migration-task:3
 
 jobs:
   deploy:
@@ -43,29 +42,36 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID and env variables in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-          environment-variables: |
-            MYSQL_USERNAME=${{ secrets.MYSQL_USERNAME }}
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
-            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID}}
-
-      - name: Check Rendered Task Definition
-        run: cat "${{ steps.task-def.outputs.task-definition }}"
-
       - name: Run ECS migration task
         run: |
           aws ecs run-task \
             --cluster ${{ env.ECS_CLUSTER }} \
             --launch-type EC2 \
-            --cli-input-json file://${{ steps.task-def.outputs.task-definition }} \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}"
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
+            --overrides '{
+              "containerOverrides": [
+                {
+                  "name": "MYSQL_USERNAME",
+                  "value": "${{ secrets.MYSQL_USERNAME }}"
+                },
+                {
+                  "name": "MYSQL_PASSWORD",
+                  "value": "${{ secrets.MYSQL_PASSWORD }}"
+                },
+                {
+                  "name": "MYSQL_HOST",
+                  "value": "${{ secrets.MYSQL_HOST }}"
+                },
+                {
+                  "name": "MYSQL_PORT",
+                  "value": "3306"
+                },
+                {
+                  "name": "MYSQL_DATABASE",
+                  "value": "bp_co"
+                }
+              ],
+              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/new-execution-role"
+            }'
