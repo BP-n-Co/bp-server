@@ -7,7 +7,7 @@ env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: bp-n-co/ecr-repo
   ECS_CLUSTER: BP-Cluster
-  ECS_TASK_DEFINITION: migration-task:3
+  ECS_TASK_DEFINITION: migration-task:4
 
 jobs:
   deploy:
