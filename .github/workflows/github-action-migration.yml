@@ -54,7 +54,6 @@ jobs:
               "containerOverrides": [
                 {
                   "name": "migration-container",
-                  "image": "${{ steps.build-image.outputs.image }}",
                   "environment": [
                     {
                       "name": "MYSQL_USERNAME",
