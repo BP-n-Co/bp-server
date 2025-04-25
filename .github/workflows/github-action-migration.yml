@@ -55,8 +55,7 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_PORT=${{ secrets.MYSQL_PORT }}
-          overrides: |
-            executionRoleArn=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role
+            AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID}}
 
       - name: Run ECS migration task
         run: |
