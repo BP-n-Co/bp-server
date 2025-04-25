@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       print_tags:
-          description: 'True to print to STDOUT'
-          required: true
-          type: boolean
+        description: "True to print to STDOUT"
+        required: true
+        type: boolean
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
