@@ -51,6 +51,7 @@ jobs:
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
             --overrides '{
+              "image": "${{ steps.build-image.outputs.image }}"
               "containerOverrides": [
                 {
                   "name": "migration-container",
