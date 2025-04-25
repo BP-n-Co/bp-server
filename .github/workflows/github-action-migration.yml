@@ -46,7 +46,7 @@ jobs:
         run: |
           aws ecs run-task \
             --cluster ${{ env.ECS_CLUSTER }} \
-            --capacity-provider-strategy capacity-provider \
+            --capacity-provider-strategy "capacity-provider" \
             --task-definition ${{ env.ECS_TASK_DEFINITION }} \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
