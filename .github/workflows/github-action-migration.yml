@@ -27,6 +27,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: migration
           GIT_SHA: ${{ github.sha }}
         run: |
@@ -35,6 +36,7 @@ jobs:
           # be deployed to ECS.
           docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
 
       - name: Run ECS migration task
         run: |
