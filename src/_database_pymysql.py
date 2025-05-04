@@ -398,7 +398,7 @@ class MysqlClient:
         self.connection.commit()
         return res_mysql[0]
 
-    def close_connection(self):
+    def close(self):
         if self.connection:
             self.connection.close()
 
@@ -430,8 +430,13 @@ class MysqlClient:
         ({", ".join([v for v in values])})
         VALUES ({", ".join(["%s"]*len(values))})
         """
-        self.execute(query=query, args=tuple(v for v in values.values()), silent=silent)
-        self.connection.commit()
+        try:
+            self.execute(
+                query=query, args=tuple(v for v in values.values()), silent=silent
+            )
+            self.connection.commit()
+        except pymysql.err.IntegrityError as e:
+            raise e
 
     def update(
         self,
