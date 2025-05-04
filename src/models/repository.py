@@ -11,8 +11,8 @@ class Repository(BaseModel):
     id = Column(VARCHAR(255), primary_key=True)
 
     createdAt = Column(DATETIME(), nullable=False)
-    defaultBranchName = Column(VARCHAR(255), nullable=False)
-    defaultBranchPrefix = Column(VARCHAR(255), nullable=False)
+    mainBranchName = Column(VARCHAR(255), nullable=False)
+    mainBranchPrefix = Column(VARCHAR(255), nullable=False)
     isPrivate = Column(BOOLEAN(), nullable=False)
     name = Column(VARCHAR(255), nullable=False)
     ownerId = Column(
