@@ -25,7 +25,6 @@ from .service import add_repository
 router = APIRouter(prefix="/repositories")
 
 
-## TODO: error handling
 @router.post("", status_code=201, response_model=DataResponse)
 def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     try:

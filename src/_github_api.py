@@ -94,15 +94,11 @@ class GithubClient:
             raise GithubRequestException(
                 detail=f"could not retreive any repository info for {name=}, {owner=}"
             )
-        repo_id = repo_info["id"]
-        is_private = repo_info["isPrivate"] == "True"
-        created_at = datetime.strptime(repo_info["createdAt"], self.date_format)
-        owner_id = repo_info["owner"]["id"]
         repo = Repository(
-            id=repo_id,
+            id=repo_info["id"],
             name=name,
-            ownerId=owner_id,
-            isPrivate=is_private,
-            createdAt=created_at,
+            ownerId=repo_info["owner"]["id"],
+            isPrivate=repo_info["isPrivate"] == "True",
+            createdAt=datetime.strptime(repo_info["createdAt"], self.date_format),
         )
         return repo
