@@ -29,11 +29,13 @@ class AlreadyExistsException(Exception):
 
 
 class HTTPSqlmodelAlreadyExistsException(HTTPException):
-    def __init__(self, entity_name: str, entity_bm: BaseModel):
+    def __init__(
+        self, entity_name: str, entity_bm: BaseModel, detail: str | None = None
+    ):
         message = f"{entity_name} already exists"
         entity = entity_bm.model_dump(exclude_unset=True)
-        detail = {"message": message, "entity": entity}
-        super().__init__(status_code=409, detail=detail)
+        details = {"message": message, "entity": entity, "detail": detail}
+        super().__init__(status_code=409, detail=details)
 
 
 class HTTPWrongAttributesException(HTTPException):

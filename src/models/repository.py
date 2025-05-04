@@ -11,14 +11,14 @@ class Repository(BaseModel):
     id = Column(VARCHAR(255), primary_key=True)
 
     createdAt = Column(DATETIME(), nullable=False)
-    mainBranchName = Column(VARCHAR(255), nullable=False)
-    mainBranchPrefix = Column(VARCHAR(255), nullable=False)
+    mainBranchName = Column(VARCHAR(255), nullable=True)
+    mainBranchPrefix = Column(VARCHAR(255), nullable=True)
     isPrivate = Column(BOOLEAN(), nullable=False)
     name = Column(VARCHAR(255), nullable=False)
     ownerId = Column(
         VARCHAR(255),
         ForeignKey(GitUser.id),
         index=True,
-        nullable=True,
+        nullable=False,
         server_default=None,
     )

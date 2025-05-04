@@ -30,11 +30,13 @@ router = APIRouter(prefix="/repositories")
 def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     try:
         resp = add_repository(name=repository_input.name, owner=repository_input.owner)
-    except AlreadyExistsException:
+    except AlreadyExistsException as e:
         raise HTTPSqlmodelAlreadyExistsException(
-            entity_name=Repository.__tablename__, entity_bm=repository_input
+            entity_name=Repository.__tablename__,
+            entity_bm=repository_input,
+            detail=str(e),
         )
-    except NoConnectionError | GithubRequestException as e:
+    except (NoConnectionError, GithubRequestException) as e:
         raise HTTPServerException(error=e)
     except NoValueInsertionError as e:
         raise HTTPWrongAttributesException(error=e)

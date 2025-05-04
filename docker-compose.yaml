@@ -27,7 +27,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/DockerfileLocal
     environment:
       PYTHONPATH: "/app"
       MYSQL_HOST: mysql

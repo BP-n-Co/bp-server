@@ -4,7 +4,7 @@ from logging import Logger
 from requests import Session
 
 from src._config import GITHUB_TOKEN
-from src.models import Repository
+from src.models import GitUser, Repository
 
 
 class GithubRequestException(Exception):
@@ -43,6 +43,36 @@ class GithubClient:
             )
         return resp_dict["data"]
 
+    def get_user_info(self, id: str) -> GitUser:
+        query = f"""
+            query {{
+                node(id: "{id}") {{
+                    ... on User {{
+                        avatarUrl
+                        email
+                        name
+                        login
+                    }}
+                }}
+            }}
+        """
+        try:
+            user_info = self.graphql_post(query=query)["node"]
+        except GithubRequestException as e:
+            raise e
+        if not user_info:
+            raise GithubRequestException(
+                detail=f"could not retreive any user info for {id=}"
+            )
+        user = GitUser(
+            id=id,
+            avatarUrl=user_info["avatarUrl"],
+            email=user_info["email"],
+            name=user_info["name"],
+            login=user_info["login"],
+        )
+        return user
+
     def get_repository_info(self, name: str, owner: str) -> Repository:
         query = f"""
         query {{
@@ -62,7 +92,7 @@ class GithubClient:
             raise e
         if not repo_info:
             raise GithubRequestException(
-                detail=f"could not retreive any info for {name=}, {owner=}"
+                detail=f"could not retreive any repository info for {name=}, {owner=}"
             )
         repo_id = repo_info["id"]
         is_private = repo_info["isPrivate"] == "True"
