@@ -21,7 +21,7 @@ class ServiceEnv:
 
 ENV = os.getenv("ENV", "local")
 
-APP_PORT = int(os.getenv("PORT", 8080))
+APP_PORT = int(os.getenv("APP_PORT", 8080))
 UVICORN_MODE_DEBUG = bool(os.getenv("UVICORN_MODE_DEBUG", False))
 
 MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD", "")
