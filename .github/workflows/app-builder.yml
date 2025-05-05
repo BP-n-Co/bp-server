@@ -52,6 +52,15 @@ jobs:
         run: |
           NEW_IMAGE="${{ steps.build-image.outputs.image }}"
           jq --arg IMAGE "$NEW_IMAGE" '
+            del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            ) |
             .containerDefinitions[0].image = $IMAGE
           ' taskdef.json > new-taskdef.json
 
