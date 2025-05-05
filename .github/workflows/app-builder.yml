@@ -1,4 +1,4 @@
-name: Build app using Amazon ECS
+name: Build app-backend (ECS Task)
 
 on:
   workflow_dispatch:
@@ -37,66 +37,45 @@ jobs:
           docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Stop previous running app-backend task
+      - name: Get current task definition JSON
+        id: get-task-def
         run: |
-          # Get the task ARNs running in the cluster with desired task definition
-          TASK_ARN=$(aws ecs list-tasks \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --desired-status RUNNING \
-            --family ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
-            --query 'taskArns[0]' \
-            --output text)
-
-          if [ "$TASK_ARN" != "None" ]; then
-            echo "Stopping existing task: $TASK_ARN"
-            aws ecs stop-task \
-              --cluster ${{ vars.ECS_CLUSTER }} \
-              --task $TASK_ARN \
-              --reason "Replacing with new backend task"
-          else
-            echo "No running backend task found"
-          fi
-
-      - name: Run ECS app-backend task
-        run: |
-          aws ecs run-task \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
+          aws ecs describe-task-definition \
             --task-definition ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
-            --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
-            --overrides '{ 
-              "containerOverrides": [ 
-                { 
-                  "name": "app-backend-container", 
-                  "environment": [ 
-                    { 
-                      "name": "MYSQL_USER", 
-                      "value": "${{ secrets.MYSQL_USERNAME_READWRITE }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PASSWORD", 
-                      "value": "${{ secrets.MYSQL_PASSWORD_READWRITE }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_HOST", 
-                      "value": "${{ secrets.MYSQL_HOST }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PORT", 
-                      "value": "${{ secrets.MYSQL_PORT }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_DATABASE", 
-                      "value": "${{ secrets.MYSQL_DATABASE }}" 
-                    },
-                    {
-                      "name": "GITHUB_TOKEN",
-                      "value": "${{ secrets.GH_TOKEN }}"
-                    }
-                  ] 
-                } 
-              ], 
-              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" 
-            }'
+            --query 'taskDefinition' \
+            > taskdef.json
+
+      - name: Update image in task definition
+        id: update-task-def
+        run: |
+          NEW_IMAGE="${{ steps.build-image.outputs.image }}"
+          jq --arg IMAGE "$NEW_IMAGE" '
+            del(
+              .taskDefinitionArn,
+              .revision,
+              .status,
+              .requiresAttributes,
+              .compatibilities,
+              .registeredAt,
+              .registeredBy
+            ) |
+            .containerDefinitions[0].image = $IMAGE
+          ' taskdef.json > new-taskdef.json
+
+      - name: Register new task definition revision
+        id: register-task-def
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-taskdef.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "NEW_TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
+
+      - name: Update ECS service to use new task definition
+        run: |
+          aws ecs update-service \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --service ${{ vars.ECS_SERVICE_NAME }} \
+            --task-definition $NEW_TASK_DEF_ARN
