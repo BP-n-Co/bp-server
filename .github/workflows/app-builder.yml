@@ -90,7 +90,11 @@ jobs:
                     { 
                       "name": "MYSQL_DATABASE", 
                       "value": "${{ secrets.MYSQL_DATABASE }}" 
-                    } 
+                    },
+                    {
+                      "name": "GITHUB_TOKEN",
+                      "value": "${{ secrets.GITHUB_TOKEN }}"
+                    }
                   ] 
                 } 
               ], 
