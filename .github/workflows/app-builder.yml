@@ -58,12 +58,21 @@ jobs:
             echo "No running backend task found"
           fi
 
+      - name: Get latest revision of task definition
+        id: latest-task-def
+        run: |
+          LATEST_TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
+
       - name: Run ECS app-backend task
         run: |
           aws ecs run-task \
             --cluster ${{ vars.ECS_CLUSTER }} \
             --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
-            --task-definition ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
+            --task-definition $LATEST_TASK_DEF \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
             --overrides '{ 
