@@ -39,7 +39,7 @@ def upgrade() -> None:
         "repository", "ownerId", existing_type=mysql.VARCHAR(length=255), nullable=False
     )
     op.create_foreign_key(
-        "repository_ibfk_1", "repository", "owner", ["ownerId"], ["id"]
+        "repository_ibfk_1", "repository", "git_user", ["ownerId"], ["id"]
     )
     # ### end Alembic commands ###
 
@@ -52,7 +52,7 @@ def downgrade() -> None:
         "repository", "ownerId", existing_type=mysql.VARCHAR(length=255), nullable=True
     )
     op.create_foreign_key(
-        "repository_ibfk_1", "repository", "owner", ["ownerId"], ["id"]
+        "repository_ibfk_1", "repository", "git_user", ["ownerId"], ["id"]
     )
     op.alter_column(
         "repository",
