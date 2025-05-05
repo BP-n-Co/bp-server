@@ -51,10 +51,10 @@ jobs:
         run: |
           aws ecs run-task \
             --cluster ${{ vars.ECS_CLUSTER }} \
-            --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
+            --capacity-provider-strategy '[{"capacityProvider" : "${{ vars.CAPACITY_PROVIDER }}"}]' \
             --task-definition $LATEST_TASK_DEF \
             --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_CLUSTER_SUBNETID1 }}, ${{ secrets.AWS_CLUSTER_SUBNETID2 }}, ${{ secrets.AWS_CLUSTER_SUBNETID3 }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_CLUSTER_SUBNETID1 }}, ${{ secrets.AWS_CLUSTER_SUBNETID2 }}, ${{ secrets.AWS_CLUSTER_SUBNETID3 }}],securityGroups=[${{ secrets.MIGRATION_SECURITY_GROUP_ID }}]}" \
             --overrides '{ 
               "containerOverrides": [ 
                 { 
