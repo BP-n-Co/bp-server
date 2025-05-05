@@ -38,82 +38,18 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
 
-      - name: Stop previous running app-backend task
-        run: |
-          # Get the task ARNs running in the cluster with desired task definition
-          TASK_ARN=$(aws ecs list-tasks \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --desired-status RUNNING \
-            --family ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
-            --query 'taskArns[0]' \
-            --output text)
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }}
+          container-name: app-backend-container
+          image: ${{ steps.build-image.outputs.image }}
 
-          if [ "$TASK_ARN" != "None" ]; then
-            echo "Stopping existing task: $TASK_ARN"
-            aws ecs stop-task \
-              --cluster ${{ vars.ECS_CLUSTER }} \
-              --task $TASK_ARN \
-              --reason "Replacing with new backend task"
-          else
-            echo "No running backend task found"
-          fi
-
-      - name: Get latest revision of task definition
-        id: latest-task-def
-        run: |
-          LATEST_TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
-
-      - name: Run ECS app-backend task
-        run: |
-          aws ecs run-task \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
-            --task-definition $LATEST_TASK_DEF \
-            --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_CLUSTER_SUBNETID1 }}, ${{ secrets.AWS_CLUSTER_SUBNETID2 }}, ${{ secrets.AWS_CLUSTER_SUBNETID3 }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
-            --overrides '{ 
-              "containerOverrides": [ 
-                { 
-                  "name": "app-backend-container", 
-                  "environment": [ 
-                    { 
-                      "name": "MYSQL_USER", 
-                      "value": "${{ secrets.MYSQL_USERNAME_READWRITE }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PASSWORD", 
-                      "value": "${{ secrets.MYSQL_PASSWORD_READWRITE }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_HOST", 
-                      "value": "${{ secrets.MYSQL_HOST }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PORT", 
-                      "value": "${{ secrets.MYSQL_PORT }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_DATABASE", 
-                      "value": "${{ secrets.MYSQL_DATABASE }}" 
-                    },
-                    {
-                      "name": "GITHUB_TOKEN",
-                      "value": "${{ secrets.GH_TOKEN }}"
-                    },
-                    {
-                      "name": "ENV",
-                      "value": "production"
-                    },
-                    {
-                      "name": "APP_PORT",
-                      "value": "8080"
-                    }
-                  ] 
-                } 
-              ], 
-              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" 
-            }'
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
