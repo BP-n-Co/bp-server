@@ -1,4 +1,4 @@
-name: Migrate using Amazon ECS
+name: Migrate DB (ECS task)
 
 on:
   workflow_dispatch:
@@ -38,12 +38,21 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
 
+      - name: Get latest revision of task definition
+        id: latest-task-def
+        run: |
+          LATEST_TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ vars.ECS_MIGRATION_TASK_DEFINITION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
+
       - name: Run ECS migration task
         run: |
           aws ecs run-task \
             --cluster ${{ vars.ECS_CLUSTER }} \
             --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
-            --task-definition ${{ vars.ECS_MIGRATION_TASK_DEFINITION }} \
+            --task-definition $LATEST_TASK_DEF \
             --count 1 \
             --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
             --overrides '{ 

@@ -1,4 +1,4 @@
-name: Build app using Amazon ECS
+name: Build app-backend (ECS Task)
 
 on:
   workflow_dispatch:
