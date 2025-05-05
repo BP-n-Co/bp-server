@@ -74,7 +74,7 @@ jobs:
             --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
             --task-definition $LATEST_TASK_DEF \
             --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_CLUSTER_SUBNETID1 }}, ${{ secrets.AWS_CLUSTER_SUBNETID2 }}, ${{ secrets.AWS_CLUSTER_SUBNETID3 }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
             --overrides '{ 
               "containerOverrides": [ 
                 { 
