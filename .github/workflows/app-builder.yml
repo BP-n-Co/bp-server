@@ -93,7 +93,7 @@ jobs:
                     },
                     {
                       "name": "GITHUB_TOKEN",
-                      "value": "${{ secrets.GITHUB_TOKEN }}"
+                      "value": "${{ secrets.GH_TOKEN }}"
                     }
                   ] 
                 } 
