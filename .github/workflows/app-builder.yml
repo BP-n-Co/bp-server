@@ -1,0 +1,102 @@
+name: Build app using Amazon ECS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: app-backend
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
+
+      - name: Stop previous running app-backend task
+        run: |
+          # Get the task ARNs running in the cluster with desired task definition
+          TASK_ARN=$(aws ecs list-tasks \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --desired-status RUNNING \
+            --family ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
+            --query 'taskArns[0]' \
+            --output text)
+
+          if [ "$TASK_ARN" != "None" ]; then
+            echo "Stopping existing task: $TASK_ARN"
+            aws ecs stop-task \
+              --cluster ${{ vars.ECS_CLUSTER }} \
+              --task $TASK_ARN \
+              --reason "Replacing with new backend task"
+          else
+            echo "No running backend task found"
+          fi
+
+      - name: Run ECS app-backend task
+        run: |
+          aws ecs run-task \
+            --cluster ${{ vars.ECS_CLUSTER }} \
+            --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
+            --task-definition ${{ vars.ECS_APP_BACKEND_TASK_DEFINITION }} \
+            --count 1 \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
+            --overrides '{ 
+              "containerOverrides": [ 
+                { 
+                  "name": "app-backend-container", 
+                  "environment": [ 
+                    { 
+                      "name": "MYSQL_USER", 
+                      "value": "${{ secrets.MYSQL_USERNAME_READWRITE }}" 
+                    }, 
+                    { 
+                      "name": "MYSQL_PASSWORD", 
+                      "value": "${{ secrets.MYSQL_PASSWORD_READWRITE }}" 
+                    }, 
+                    { 
+                      "name": "MYSQL_HOST", 
+                      "value": "${{ secrets.MYSQL_HOST }}" 
+                    }, 
+                    { 
+                      "name": "MYSQL_PORT", 
+                      "value": "${{ secrets.MYSQL_PORT }}" 
+                    }, 
+                    { 
+                      "name": "MYSQL_DATABASE", 
+                      "value": "${{ secrets.MYSQL_DATABASE }}" 
+                    },
+                    {
+                      "name": "GITHUB_TOKEN",
+                      "value": "${{ secrets.GH_TOKEN }}"
+                    }
+                  ] 
+                } 
+              ], 
+              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" 
+            }'
