@@ -7,7 +7,7 @@ else
 fi
 
 echo "Grabing latest mock database"
-cp -r .db-example .db
+cp -r .db_example .db
 
 echo "Starting database docker and running migrations"
 docker-compose up migrator --build
