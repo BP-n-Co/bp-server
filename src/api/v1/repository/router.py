@@ -6,6 +6,7 @@ from src._database_pymysql import (
     NoConnectionError,
     NoUpdateValuesError,
     NoValueInsertionError,
+    WrongQueryError,
 )
 from src._exceptions import (
     AlreadyExistsException,
@@ -16,7 +17,7 @@ from src._exceptions import (
     NotFoundException,
     WrongAttributesException,
 )
-from src._github_api import GithubRequestException
+from src._github_api import GithubRequestException, WrongAttributeRequestException
 from src.models import Repository
 
 from .schema import RepositoryTrackInput
@@ -35,9 +36,9 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
             entity_bm=repository_input,
             detail=str(e),
         )
-    except (NoConnectionError, GithubRequestException) as e:
-        raise HTTPServerException(error=e)
-    except NoValueInsertionError as e:
-        raise HTTPWrongAttributesException(error=e)
+    except (NoConnectionError, GithubRequestException, WrongQueryError) as e:
+        raise HTTPServerException(detail=f"{type(e)=}, {str(e)}")
+    except (WrongAttributeRequestException, NoValueInsertionError) as e:
+        raise HTTPWrongAttributesException(detail=f"{type(e)=}, {str(e)}")
 
     return DataResponse(data=resp.to_dict())

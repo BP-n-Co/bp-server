@@ -12,6 +12,11 @@ class GithubRequestException(Exception):
         super().__init__(f"Error when requesting Github Api, {detail}")
 
 
+class WrongAttributeRequestException(Exception):
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(f"wrong attributes when requesting github, {detail}")
+
+
 class GithubClient:
     def __init__(self, logger: Logger | None = None, token: str | None = None) -> None:
         self.logger = logger
@@ -61,7 +66,7 @@ class GithubClient:
         except GithubRequestException as e:
             raise e
         if not user_info:
-            raise GithubRequestException(
+            raise WrongAttributeRequestException(
                 detail=f"could not retreive any user info for {id=}"
             )
         user = GitUser(
@@ -91,7 +96,7 @@ class GithubClient:
         except GithubRequestException as e:
             raise e
         if not repo_info:
-            raise GithubRequestException(
+            raise WrongAttributeRequestException(
                 detail=f"could not retreive any repository info for {name=}, {owner=}"
             )
         repo = Repository(
