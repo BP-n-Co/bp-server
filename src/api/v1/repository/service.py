@@ -3,10 +3,10 @@ from pymysql.err import IntegrityError
 from src._config import base_logger
 from src._database_pymysql import (
     MysqlClient,
-    NoConnectionError,
-    NoUpdateValuesError,
-    NoValueInsertionError,
-    WrongQueryError,
+    MySqlNoConnectionError,
+    MySqlNoUpdateValuesError,
+    MySqlNoValueInsertionError,
+    MySqlWrongQueryError,
 )
 from src._exceptions import (
     AlreadyExistsException,
@@ -16,7 +16,7 @@ from src._exceptions import (
 from src._github_api import (
     GithubClient,
     GithubRequestException,
-    WrongAttributeRequestException,
+    GithubWrongAttributesException,
 )
 from src.models import GitUser, Repository
 
@@ -32,7 +32,7 @@ def add_repository(name: str, owner: str) -> Repository:
     # 1. Call Github to get the info about the repo (nodeId)
     try:
         repo = github_client.get_repository_info(name=name, owner=owner)
-    except (GithubRequestException, WrongAttributeRequestException) as e:
+    except (GithubRequestException, GithubWrongAttributesException) as e:
         quit()
         raise e
 
@@ -40,7 +40,7 @@ def add_repository(name: str, owner: str) -> Repository:
     # 2.1 Get user info
     try:
         github_user = github_client.get_user_info(id=str(repo.ownerId))
-    except (GithubRequestException, WrongAttributeRequestException) as e:
+    except (GithubRequestException, GithubWrongAttributesException) as e:
         quit()
         raise e
 
@@ -49,7 +49,7 @@ def add_repository(name: str, owner: str) -> Repository:
         existence = mysql_client.select_by_id(
             table_name=GitUser.__tablename__, id=str(github_user.id)
         )
-    except (NoConnectionError, WrongQueryError) as e:
+    except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
         quit()
         raise e
 
@@ -58,7 +58,11 @@ def add_repository(name: str, owner: str) -> Repository:
             mysql_client.insert_one(
                 table_name=GitUser.__tablename__, values=github_user.to_dict()
             )
-        except (NoValueInsertionError, NoConnectionError, WrongQueryError) as e:
+        except (
+            MySqlNoValueInsertionError,
+            MySqlNoConnectionError,
+            MySqlWrongQueryError,
+        ) as e:
             quit()
             raise e
 
@@ -68,7 +72,11 @@ def add_repository(name: str, owner: str) -> Repository:
         mysql_client.insert_one(
             table_name=Repository.__tablename__, values=repo.to_dict()
         )
-    except (NoValueInsertionError, NoConnectionError, WrongQueryError) as e:
+    except (
+        MySqlNoValueInsertionError,
+        MySqlNoConnectionError,
+        MySqlWrongQueryError,
+    ) as e:
         quit()
         raise e
     except IntegrityError as e:

@@ -33,7 +33,7 @@ class HTTPSqlmodelAlreadyExistsException(HTTPException):
         details = {"message": message, "entity": entity}
         if ENV != ServiceEnv.production and detail:
             details.update({"detail": detail})
-        super().__init__(status_code=409, detail=details)
+        super().__init__(status_code=409, detail=str(details))
 
 
 class HTTPWrongAttributesException(HTTPException):
