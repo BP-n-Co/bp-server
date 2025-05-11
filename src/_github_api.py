@@ -3,7 +3,7 @@ from logging import Logger
 
 from requests import Session
 
-from src._config import GITHUB_TOKEN
+from src._config import GITHUB_TOKEN, base_logger
 from src.models import GitUser, Repository
 
 
@@ -19,7 +19,7 @@ class WrongAttributeRequestException(Exception):
 
 class GithubClient:
     def __init__(self, logger: Logger | None = None, token: str | None = None) -> None:
-        self.logger = logger
+        self.logger = logger if logger else base_logger
         self.session = Session()
         self.token = token if token else GITHUB_TOKEN
         self.date_format = "%Y-%m-%dT%H:%M:%SZ"
@@ -33,19 +33,19 @@ class GithubClient:
             url="https://api.github.com/graphql", headers=headers, json={"query": query}
         )
         if not resp.status_code == 200:
-            raise GithubRequestException(
-                detail=f"could not get response from Github {resp.status_code=}."
-            )
+            message = f"could not get response from Github {resp.status_code=}."
+            self.logger.error(message)
+            raise GithubRequestException(detail=message)
         try:
             resp_dict = resp.json()
         except Exception as e:
-            raise GithubRequestException(
-                detail=f"could not serialized Github response : {type(e)=}, {str(e)=}."
-            )
+            message = f"could not serialized Github response : {type(e)=}, {str(e)=}."
+            self.logger.warning(message)
+            raise GithubRequestException(detail=message)
         if not isinstance(resp_dict, dict) or "data" not in resp_dict:
-            raise GithubRequestException(
-                detail=f"got response without data : {str(resp_dict)=}"
-            )
+            message = f"got response without data : {str(resp_dict)=}"
+            self.logger.warning(message)
+            raise GithubRequestException(detail=message)
         return resp_dict["data"]
 
     def get_user_info(self, id: str) -> GitUser:
@@ -61,14 +61,11 @@ class GithubClient:
                 }}
             }}
         """
-        try:
-            user_info = self.graphql_post(query=query)["node"]
-        except GithubRequestException as e:
-            raise e
+        user_info = self.graphql_post(query=query)["node"]
         if not user_info:
-            raise WrongAttributeRequestException(
-                detail=f"could not retreive any user info for {id=}"
-            )
+            message = f"could not retreive any user info for {id=}"
+            self.logger.warning(message)
+            raise WrongAttributeRequestException(detail=message)
         user = GitUser(
             id=id,
             avatarUrl=user_info["avatarUrl"],
@@ -91,14 +88,11 @@ class GithubClient:
             }}
         }}
         """
-        try:
-            repo_info = self.graphql_post(query=query)["repository"]
-        except GithubRequestException as e:
-            raise e
+        repo_info = self.graphql_post(query=query)["repository"]
         if not repo_info:
-            raise WrongAttributeRequestException(
-                detail=f"could not retreive any repository info for {name=}, {owner=}"
-            )
+            message = f"could not retreive any repository info for {name=}, {owner=}"
+            self.logger.warning(message)
+            raise WrongAttributeRequestException(detail=message)
         repo = Repository(
             id=repo_info["id"],
             name=name,
