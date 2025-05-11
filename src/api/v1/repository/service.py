@@ -52,9 +52,10 @@ def add_repository(name: str, owner: str, branch_name: str) -> Repository:
             }}"""
         resp = github_client.graphql_post(query=query)
         if not resp["repository"]["ref"]:
-            quit()
-            raise GithubWrongAttributesException("branch cannot be found")
+            raise GithubWrongAttributesException("branch name cannot be found")
         repo.trackedBranchName = branch_name
+        repo.trackedBranchRef = "refs/heads/" + branch_name
+        repo.rootIsReached = False
     except (GithubRequestException, GithubWrongAttributesException) as e:
         quit()
         raise e

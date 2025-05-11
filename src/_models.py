@@ -2,7 +2,11 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import DeclarativeBase
 
 
-class BaseModel(DeclarativeBase):
+class Base(DeclarativeBase):
+    pass
+
+
+class BaseModel(Base):
     __abstract__ = True
 
     def to_dict(
@@ -32,8 +36,7 @@ class BaseModel(DeclarativeBase):
             c.key: getattr(self, c.key)
             for c in inspect(self).mapper.column_attrs
             if (
-                not exclude_null
-                or getattr(self, c.key) is not None
+                (not exclude_null or getattr(self, c.key) is not None)
                 and c.key not in exclude_field
                 and (c.key != "id" or not exclude_id)
             )
