@@ -1,4 +1,7 @@
-from sqlalchemy import BOOLEAN, DATETIME, VARCHAR, Column, ForeignKey
+from datetime import datetime
+
+from sqlalchemy import BOOLEAN, DATETIME, VARCHAR, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src._models import BaseModel
 
@@ -8,14 +11,19 @@ from .git_user import GitUser
 class Repository(BaseModel):
     __tablename__ = "repository"
 
-    id = Column(VARCHAR(255), primary_key=True)
+    id: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
+    oldId: Mapped[str] = mapped_column(VARCHAR(255), nullable=True, server_default=None)
+    name: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
 
-    createdAt = Column(DATETIME(), nullable=False)
-    mainBranchName = Column(VARCHAR(255), nullable=True)
-    mainBranchPrefix = Column(VARCHAR(255), nullable=True)
-    isPrivate = Column(BOOLEAN(), nullable=False)
-    name = Column(VARCHAR(255), nullable=False)
-    ownerId = Column(
+    createdAt: Mapped[datetime] = mapped_column(DATETIME(), nullable=False)
+    rootCommitIsReached: Mapped[bool] = mapped_column(
+        BOOLEAN(), nullable=False, server_default="0"
+    )
+    isPrivate: Mapped[bool] = mapped_column(BOOLEAN(), nullable=False)
+
+    trackedBranchName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    trackedBranchRef: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    ownerId: Mapped[str] = mapped_column(
         VARCHAR(255),
         ForeignKey(GitUser.id),
         index=True,

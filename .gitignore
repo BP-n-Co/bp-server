@@ -3,6 +3,7 @@ data
 tmp/
 test/
 .venv
+.db
 
 __pycache__
 
