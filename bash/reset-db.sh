@@ -6,5 +6,8 @@ else
   echo "Docker Compose is not running"
 fi
 
+echo "Grabing latest mock database"
+cp -r .db-example .db
+
 echo "Starting database docker and running migrations"
 docker-compose up migrator --build

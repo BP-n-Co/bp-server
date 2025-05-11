@@ -1,10 +1,8 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
 
-
-class BaseModel(Base):
+class BaseModel(DeclarativeBase):
     __abstract__ = True
 
     def to_dict(

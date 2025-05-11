@@ -29,7 +29,11 @@ router = APIRouter(prefix="/repositories")
 @router.post("", status_code=201, response_model=DataResponse)
 def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     try:
-        resp = add_repository(name=repository_input.name, owner=repository_input.owner)
+        resp = add_repository(
+            name=repository_input.name,
+            owner=repository_input.owner,
+            branch_name=repository_input.branch_name,
+        )
     except AlreadyExistsException as e:
         raise HTTPSqlmodelAlreadyExistsException(
             entity_name=Repository.__tablename__,

@@ -338,9 +338,11 @@ class MysqlClient:
         cond_geq: dict[str, object] = dict(),
         cond_l: dict[str, object] = dict(),
         cond_g: dict[str, object] = dict(),
-        silent: bool = False,
+        order_by: str = "",
+        ascending_order: bool = True,
         limit: int = 0,
         offset: int = 0,
+        silent: bool = False,
     ) -> tuple:
         """Execute a SELECT query with various conditions.
 
@@ -399,6 +401,10 @@ class MysqlClient:
             cond_not_null=cond_not_null,
             cond_null=cond_null,
         )
+        if order_by:
+            query = (
+                query + f" ORDER BY {order_by} {'ASC' if ascending_order else 'DESC'} "
+            )
         if limit:
             query = query + f" LIMIT {limit} "
             query = query + f" OFFSET {offset} "
