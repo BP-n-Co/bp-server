@@ -401,13 +401,13 @@ class MysqlClient:
             cond_not_null=cond_not_null,
             cond_null=cond_null,
         )
+        if limit:
+            query = query + f" LIMIT {limit} "
+            query = query + f" OFFSET {offset} "
         if order_by:
             query = (
                 query + f" ORDER BY {order_by} {'ASC' if ascending_order else 'DESC'} "
             )
-        if limit:
-            query = query + f" LIMIT {limit} "
-            query = query + f" OFFSET {offset} "
         query = query + ";"
 
         res_mysql = self.execute(query=query, silent=silent)
