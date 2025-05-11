@@ -1,7 +1,9 @@
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class BaseModel(Base):
@@ -34,8 +36,7 @@ class BaseModel(Base):
             c.key: getattr(self, c.key)
             for c in inspect(self).mapper.column_attrs
             if (
-                not exclude_null
-                or getattr(self, c.key) is not None
+                (not exclude_null or getattr(self, c.key) is not None)
                 and c.key not in exclude_field
                 and (c.key != "id" or not exclude_id)
             )

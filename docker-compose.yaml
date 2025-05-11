@@ -10,7 +10,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - database:/var/lib/mysql
+      - ./.db:/var/lib/mysql
 
   migrator:
     build:
@@ -38,6 +38,3 @@ services:
     ports:
       - "${APP_PORT}:${APP_PORT}"
     entrypoint: ["python3", "-m", "src.main"]
-
-volumes:
-  database:
