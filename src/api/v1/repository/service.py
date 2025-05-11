@@ -21,7 +21,7 @@ from src._github_api import (
 from src.models import GitUser, Repository
 
 
-def add_repository(name: str, owner: str) -> Repository:
+def add_repository(name: str, owner: str, branch_name: str) -> Repository:
     mysql_client = MysqlClient(logger=base_logger)
     github_client = GithubClient(logger=base_logger)
 
@@ -29,14 +29,38 @@ def add_repository(name: str, owner: str) -> Repository:
         mysql_client.close()
         github_client.close()
 
-    # 1. Call Github to get the info about the repo (nodeId)
+    ## 1. Call Github to get the info about the repo (nodeId)
+    # 1.1 Get repo info
     try:
         repo = github_client.get_repository_info(name=name, owner=owner)
     except (GithubRequestException, GithubWrongAttributesException) as e:
         quit()
         raise e
+    # 1.2 Check if branch is valid
+    try:
+        query = f"""
+            query {{
+                repository(owner: "{owner}", name: "{name}") {{
+                    ref(qualifiedName: "refs/heads/{branch_name}") {{
+                        target {{
+                            ... on Commit {{
+                                id
+                            }}
+                        }}
+                    }}
+                }}
+            }}"""
+        resp = github_client.graphql_post(query=query)
+        if not resp["repository"]["ref"]:
+            raise GithubWrongAttributesException("branch name cannot be found")
+        repo.trackedBranchName = branch_name
+        repo.trackedBranchRef = "refs/heads/" + branch_name
+        repo.rootCommitIsReached = False
+    except (GithubRequestException, GithubWrongAttributesException) as e:
+        quit()
+        raise e
 
-    # 2. Add user in DB
+    ## 2. Add user in DB
     # 2.1 Get user info
     try:
         github_user = github_client.get_user_info(id=str(repo.ownerId))
