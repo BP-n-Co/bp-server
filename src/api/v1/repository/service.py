@@ -55,7 +55,7 @@ def add_repository(name: str, owner: str, branch_name: str) -> Repository:
             raise GithubWrongAttributesException("branch name cannot be found")
         repo.trackedBranchName = branch_name
         repo.trackedBranchRef = "refs/heads/" + branch_name
-        repo.rootIsReached = False
+        repo.rootCommitIsReached = False
     except (GithubRequestException, GithubWrongAttributesException) as e:
         quit()
         raise e

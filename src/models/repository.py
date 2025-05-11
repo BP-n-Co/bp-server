@@ -16,7 +16,7 @@ class Repository(BaseModel):
     name: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
 
     createdAt: Mapped[datetime] = mapped_column(DATETIME(), nullable=False)
-    rootIsReached: Mapped[bool] = mapped_column(
+    rootCommitIsReached: Mapped[bool] = mapped_column(
         BOOLEAN(), nullable=False, server_default="0"
     )
     isPrivate: Mapped[bool] = mapped_column(BOOLEAN(), nullable=False)
