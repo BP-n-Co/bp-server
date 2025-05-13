@@ -26,6 +26,11 @@ MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 
 
+class DateTimeFormat:
+    github = "%Y-%m-%dT%H:%M:%SZ"
+    bp_co_long = "%Y-%m-%d %H:%M:%S"
+
+
 class ServiceEnv:
     local = "local"
     production = "production"
