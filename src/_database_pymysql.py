@@ -1,8 +1,9 @@
+import traceback
 from logging import Logger
 
 import pymysql.cursors
 
-from src._config import (
+from _config import (
     MYSQL_DATABASE,
     MYSQL_HOST,
     MYSQL_PASSWORD,
@@ -145,7 +146,7 @@ class MysqlClient:
         cond_l: dict[str, object] = dict(),
         cond_g: dict[str, object] = dict(),
         silent: bool = False,
-    ) -> tuple:
+    ) -> tuple[dict[str, object], ...]:
         """Delete rows from a database table based on conditions.
 
         Parameters
@@ -214,7 +215,7 @@ class MysqlClient:
 
     def execute(
         self, query: str, args: tuple | dict | None = None, silent=False
-    ) -> tuple:
+    ) -> tuple[dict[str, object], ...]:
         """Execute a SQL query and return the results.
 
         Parameters
@@ -244,7 +245,9 @@ class MysqlClient:
                 cursor.execute(query=query, args=args)
                 res = cursor.fetchall()
             except pymysql.err.ProgrammingError as e:
-                self.logger.warning(f"error while executing query {type(e)=}, {str(e)}")
+                self.logger.warning(
+                    f"error while executing query {type(e)=}, {str(e)}, {traceback.print_exc()}"
+                )
                 raise MySqlWrongQueryError(f"{type(e)=}, {str(e)=}")
             if not silent:
                 self.logging(cursor)
@@ -323,7 +326,8 @@ class MysqlClient:
         res_mysql = self.execute(query=query, silent=silent)
         if not res_mysql:
             return None
-        return res_mysql[0].get("ct", None)
+        res = res_mysql[0].get("ct", None)
+        return int(str(res)) if res else None
 
     def select(
         self,
@@ -343,7 +347,7 @@ class MysqlClient:
         limit: int = 0,
         offset: int = 0,
         silent: bool = False,
-    ) -> tuple:
+    ) -> tuple[dict[str, object], ...]:
         """Execute a SELECT query with various conditions.
 
         Parameters
@@ -401,13 +405,13 @@ class MysqlClient:
             cond_not_null=cond_not_null,
             cond_null=cond_null,
         )
-        if limit:
-            query = query + f" LIMIT {limit} "
-            query = query + f" OFFSET {offset} "
         if order_by:
             query = (
                 query + f" ORDER BY {order_by} {'ASC' if ascending_order else 'DESC'} "
             )
+        if limit:
+            query = query + f" LIMIT {limit} "
+            query = query + f" OFFSET {offset} "
         query = query + ";"
 
         res_mysql = self.execute(query=query, silent=silent)
@@ -469,7 +473,9 @@ class MysqlClient:
                 table_name=table_name, cond_eq={"id": id}, silent=silent
             )
         except MySqlWrongQueryError as e:
-            self.logger.warning(f"wrong query when trying to delete by id, {str(e)}")
+            self.logger.warning(
+                f"wrong query when trying to delete by id, {type(e)=}, {str(e)}, {traceback.print_exc()}"
+            )
             raise e
         self.connection.commit()  # type: ignore
         return res_mysql[0] if res_mysql else dict()
@@ -510,7 +516,9 @@ class MysqlClient:
                 query=query, args=tuple(v for v in values.values()), silent=silent
             )
         except MySqlWrongQueryError as e:
-            self.logger.warning(f"wrong query when trying to insert one, {str(e)}")
+            self.logger.warning(
+                f"wrong query when trying to insert one, {type(e)=}, {str(e)}, {traceback.print_exc()}"
+            )
             raise e
         self.connection.commit()  # type: ignore
 
@@ -529,7 +537,7 @@ class MysqlClient:
         cond_l: dict[str, object] = dict(),
         cond_g: dict[str, object] = dict(),
         silent: bool = False,
-    ) -> tuple:
+    ) -> tuple[dict[str, object], ...]:
         """Update rows in a database table based on conditions.
 
         Parameters
@@ -600,10 +608,10 @@ class MysqlClient:
             )
         except Exception as e:
             self.logger.warning(
-                f"error when trying to get the ids to update, {type(e)=} {str(e)=}"
+                f"error when trying to get the ids to update, {type(e)=}, {str(e)}, {traceback.print_exc()}"
             )
             raise e
-        ids_to_update_ls = [dt["id"] for dt in ids_to_update]
+        ids_to_update_ls = [str(dt["id"]) for dt in ids_to_update]
         if not ids_to_update:
             self.logger.info("nothing to update")
             return tuple()
@@ -619,7 +627,9 @@ class MysqlClient:
         try:
             self.execute(query=query, silent=silent)
         except MySqlWrongQueryError as e:
-            self.logger.warning(f"wrong query when trying to update, {str(e)}")
+            self.logger.warning(
+                f"wrong query when trying to update, {type(e)=}, {str(e)}, {traceback.print_exc()}"
+            )
             raise e
         self.connection.commit()  # type: ignore
 
@@ -659,6 +669,14 @@ class MysqlClient:
                 silent=silent,
             )
         except MySqlWrongQueryError as e:
-            self.logger.warning(f"wrong query when trying to update by id, {str(e)}")
+            self.logger.warning(
+                f"wrong query when trying to update by id, {type(e)=}, {str(e)}, {traceback.print_exc()}"
+            )
             raise e
         return mysql_res[0] if mysql_res else dict()
+
+    def id_exists(self, table_name: str, id: str, silent: bool = False) -> bool:
+        res = self.select_by_id(table_name=table_name, id=id, silent=silent)
+        if res:
+            return True
+        return False
