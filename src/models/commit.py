@@ -19,8 +19,12 @@ class Commit(BaseModel):
         VARCHAR(255), ForeignKey(Repository.id), nullable=False
     )
 
-    addition: Mapped[int] = mapped_column(INTEGER(), nullable=False, server_default="0")
-    deletion: Mapped[int] = mapped_column(INTEGER(), nullable=False, server_default="0")
+    additions: Mapped[int] = mapped_column(
+        INTEGER(), nullable=False, server_default="0"
+    )
+    deletions: Mapped[int] = mapped_column(
+        INTEGER(), nullable=False, server_default="0"
+    )
 
     authoredDate: Mapped[datetime] = mapped_column(DATETIME(), nullable=False)
     authorAvatarUrl: Mapped[str] = mapped_column(
