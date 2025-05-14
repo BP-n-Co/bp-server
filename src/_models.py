@@ -39,15 +39,17 @@ class BaseModel(Base):
         if include_field:
             if exclude_field or exclude_id or exclude_null:
                 raise Exception("cannot select include_field with exclude options")
+            return {
+                c.key: getattr(self, c.key)
+                for c in inspect(self).mapper.column_attrs
+                if c.key in include_field
+            }
         return {
             c.key: getattr(self, c.key)
             for c in inspect(self).mapper.column_attrs
             if (
-                c.key in include_field
-                or (
-                    (not exclude_null or getattr(self, c.key) is not None)
-                    and c.key not in exclude_field
-                    and (c.key != "id" or not exclude_id)
-                )
+                (not exclude_null or getattr(self, c.key) is not None)
+                and c.key not in exclude_field
+                and (c.key != "id" or not exclude_id)
             )
         }
