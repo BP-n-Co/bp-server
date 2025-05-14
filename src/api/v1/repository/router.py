@@ -20,7 +20,7 @@ from src._exceptions import (
 from src._github_api import GithubRequestException, GithubWrongAttributesException
 from src.models import Repository
 
-from .schema import CommitsFetchInput, RepositoryTrackInput
+from .schema import RepositoryTrackInput
 from .service import add_repository, get_commits
 
 router = APIRouter(prefix="/repositories")
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/repositories")
 @router.post("", status_code=201, response_model=DataResponse)
 def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     try:
-        resp = add_repository(
+        repo = add_repository(
             name=repository_input.name,
             owner=repository_input.owner,
             branch_name=repository_input.branch_name,
@@ -45,7 +45,7 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     except (GithubWrongAttributesException, MySqlNoValueInsertionError) as e:
         raise HTTPWrongAttributesException(detail=f"{str(e)}")
 
-    return DataResponse(data=resp.to_dict())
+    return DataResponse(data=repo)
 
 
 @router.get("/commits", response_model=DataResponse)

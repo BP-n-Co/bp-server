@@ -21,7 +21,7 @@ from src._github_api import (
 from src.models import Commit, GitUser, Repository
 
 
-def add_repository(name: str, owner: str, branch_name: str) -> Repository:
+def add_repository(name: str, owner: str, branch_name: str) -> dict[str, object]:
     mysql_client = MysqlClient(logger=base_logger)
     github_client = GithubClient(logger=base_logger)
 
@@ -109,7 +109,7 @@ def add_repository(name: str, owner: str, branch_name: str) -> Repository:
 
     quit()
     # 4. Return created one
-    return repo
+    return repo.to_dict()
 
 
 def get_commits(name: str, ownerId: str) -> list[dict[str, object]]:
@@ -119,7 +119,7 @@ def get_commits(name: str, ownerId: str) -> list[dict[str, object]]:
         mysql_client.close()
 
     try:
-        resp = mysql_client.select(
+        repo = mysql_client.select(
             table_name=Repository.__tablename__,
             select_col=["id"],
             cond_eq={"name": name, "ownerId": ownerId},
@@ -127,13 +127,13 @@ def get_commits(name: str, ownerId: str) -> list[dict[str, object]]:
     except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
         quit()
         raise e
-    if not resp:
+    if not repo:
         quit()
         raise WrongAttributesException(
             "cannot fetch any repository, make sure to add it first on the repositories to track"
         )
 
-    repo_id = resp[0]["id"]
+    repo_id = repo[0]["id"]
     try:
         commits = mysql_client.select(
             table_name=Commit.__tablename__,
