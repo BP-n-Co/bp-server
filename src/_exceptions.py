@@ -10,8 +10,7 @@ class HTTPSNotFoundException(HTTPException):
 
 
 class WrongAttributesException(Exception):
-    def __init__(self, table_name: str, detail: str | None = None):
-        super().__init__(f"Invalid data for {table_name=}, {detail}")
+    pass
 
 
 class NotFoundException(Exception):
