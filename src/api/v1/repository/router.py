@@ -52,13 +52,13 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
             detail=str(e),
         )
     except (
-        MySqlNoConnectionError,
-        GithubServerError,
         GithubNoDataResponseError,
+        GithubServerError,
+        MySqlNoConnectionError,
         MySqlWrongQueryError,
     ) as e:
         raise HTTPServerException(detail=f"{type(e), str(e), {traceback.print_exc()}}")
-    except (WrongAttributesException, MySqlNoValueInsertionError) as e:
+    except (MySqlNoValueInsertionError, WrongAttributesException) as e:
         raise HTTPWrongAttributesException(detail=f"{str(e)}")
 
     return DataResponse(data=repo)

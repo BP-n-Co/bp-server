@@ -60,17 +60,18 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
 
     # 1.2 Check if branch is valid
     query = f"""
-        query {{
-            repository(owner: "{owner_login}", name: "{name}") {{
-                ref(qualifiedName: "refs/heads/{branch_name}") {{
-                    target {{
-                        ... on Commit {{
-                            id
-                        }}
+    query {{
+        repository(owner: "{owner_login}", name: "{name}") {{
+            ref(qualifiedName: "refs/heads/{branch_name}") {{
+                target {{
+                    ... on Commit {{
+                        id
                     }}
                 }}
             }}
-        }}"""
+        }}
+    }}
+    """
     try:
         resp = github_client.graphql_post(query=query)
     except (GithubServerError, GithubNoDataResponseError) as e:
@@ -86,27 +87,26 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
     ## 2. Add user in DB
     # 2.1 Get user info
     query = f"""
-        query {{
-            node(id: "{str(repo.ownerId)}") {{
-                ... on User {{
-                    avatarUrl
-                    email
-                    name
-                    login
-                }}
+    query {{
+        node(id: "{str(repo.ownerId)}") {{
+            ... on User {{
+                avatarUrl
+                email
+                name
+                login
             }}
         }}
+    }}
     """
     try:
-        user_info = github_client.graphql_post(query=query)
+        user_info = github_client.graphql_post(query=query)["node"]
     except (GithubServerError, GithubNoDataResponseError) as e:
         quit()
         raise e
-    if not user_info or not user_info["node"]:
+    if not user_info:
         message = f"could not retreive any user info for {str(repo.ownerId)=}"
         base_logger.warning(message)
         raise WrongAttributesException(message)
-    user_info = user_info["node"]
     github_user = GitUser(
         id=str(repo.ownerId),
         avatarUrl=user_info["avatarUrl"],
@@ -213,12 +213,11 @@ def get_repositories() -> list[dict[str, object]]:
         try:
             owner = mysql_client.select_by_id(
                 table_name=GitUser.__tablename__,
-                select_col=["login"],
                 id=str(repo["ownerId"]),
+                select_col=["login"],
             )
         except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
             quit()
             raise e
-        print(owner)
         repo["ownerLogin"] = owner["login"]
     return [r for r in repos]

@@ -9,7 +9,7 @@ from src.models import GitUser, Repository
 
 class GithubServerError(Exception):
     def __init__(self, detail: str | None = None) -> None:
-        super().__init__(f"Error when requesting Github Api, {detail}")
+        super().__init__(f"problem when requesting Github Api, {detail}")
 
 
 class GithubNoDataResponseError(Exception):
