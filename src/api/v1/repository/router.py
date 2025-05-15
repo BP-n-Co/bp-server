@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import APIRouter
 from pymysql.err import IntegrityError
 
@@ -17,13 +19,22 @@ from src._exceptions import (
     NotFoundException,
     WrongAttributesException,
 )
-from src._github_api import GithubRequestException, GithubWrongAttributesException
+from src._github_api import GithubNoDataResponseError, GithubServerError
 from src.models import Repository
 
 from .schema import RepositoryTrackInput
-from .service import add_repository, get_commits
+from .service import add_repository, get_commits, get_repositories
 
 router = APIRouter(prefix="/repositories")
+
+
+@router.get("", response_model=DataResponse)
+def fetch_repositories() -> DataResponse:
+    try:
+        repos = get_repositories()
+    except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
+        raise HTTPServerException(detail=f"{type(e), str(e), {traceback.print_exc()}}")
+    return DataResponse(data=repos)
 
 
 @router.post("", status_code=201, response_model=DataResponse)
@@ -31,7 +42,7 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
     try:
         repo = add_repository(
             name=repository_input.name,
-            owner=repository_input.owner,
+            owner_login=repository_input.owner_login,
             branch_name=repository_input.branch_name,
         )
     except AlreadyExistsException as e:
@@ -40,9 +51,14 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
             entity_bm=repository_input,
             detail=str(e),
         )
-    except (MySqlNoConnectionError, GithubRequestException, MySqlWrongQueryError) as e:
-        raise HTTPServerException(detail=f"{type(e)=}, {str(e)}")
-    except (GithubWrongAttributesException, MySqlNoValueInsertionError) as e:
+    except (
+        MySqlNoConnectionError,
+        GithubServerError,
+        GithubNoDataResponseError,
+        MySqlWrongQueryError,
+    ) as e:
+        raise HTTPServerException(detail=f"{type(e), str(e), {traceback.print_exc()}}")
+    except (WrongAttributesException, MySqlNoValueInsertionError) as e:
         raise HTTPWrongAttributesException(detail=f"{str(e)}")
 
     return DataResponse(data=repo)
@@ -53,7 +69,7 @@ def fetch_commits(name: str, ownerId: str) -> DataResponse:
     try:
         commits = get_commits(name=name, ownerId=ownerId)
     except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
-        raise HTTPServerException(detail=f"{type(e)=}, {str(e)}")
+        raise HTTPServerException(detail=f"{type(e), str(e), {traceback.print_exc()}}")
     except WrongAttributesException as e:
         raise HTTPWrongAttributesException(detail=str(e))
     return DataResponse(data=commits)
