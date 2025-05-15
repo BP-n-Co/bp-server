@@ -432,7 +432,13 @@ class MysqlClient:
         res_mysql = self.execute(query=query, silent=silent)
         return res_mysql
 
-    def select_by_id(self, table_name: str, id: str, silent: bool = False) -> dict:
+    def select_by_id(
+        self,
+        table_name: str,
+        id: str,
+        select_col: list[str] = list(),
+        silent: bool = False,
+    ) -> dict:
         """Select a row from a database table by its ID.
 
         Parameters
@@ -441,6 +447,8 @@ class MysqlClient:
             Name of the table to select from
         id : str
             ID of the row to select
+        select_col : list[str], optional
+            List of columns to select, by default all columns
         silent : bool, optional
             If True, suppress logging of the query execution, by default False
 
@@ -457,7 +465,10 @@ class MysqlClient:
             If query is wrong
         """
         res_mysql = self.select(
-            table_name=table_name, cond_eq={"id": id}, silent=silent
+            table_name=table_name,
+            select_col=select_col,
+            cond_eq={"id": id},
+            silent=silent,
         )
         if not res_mysql:
             return dict()
