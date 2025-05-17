@@ -1,7 +1,7 @@
 from sqlalchemy import VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src._models import BaseModel
+from _models import BaseModel
 
 
 class GitUser(BaseModel):
