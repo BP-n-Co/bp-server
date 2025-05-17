@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import DATETIME, INTEGER, VARCHAR, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src._models import BaseModel
+from _models import BaseModel
 
 from .git_user import GitUser
 from .repository import Repository
