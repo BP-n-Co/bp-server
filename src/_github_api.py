@@ -1,10 +1,8 @@
-from datetime import datetime
 from logging import Logger
 
 from requests import Session
 
-from src._config import GITHUB_TOKEN, base_logger
-from src.models import GitUser, Repository
+from _config import GITHUB_TOKEN, base_logger
 
 
 class GithubServerError(Exception):

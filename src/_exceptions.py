@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from pydantic import BaseModel
 
-from src._config import ENV, ServiceEnv
+from _config import ENV, ServiceEnv
 
 
 class HTTPSNotFoundException(HTTPException):

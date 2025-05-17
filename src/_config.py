@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-root_path = Path(__file__).resolve()
+root_path = Path(__file__).resolve().parent
 sys.path.append(str(root_path))
 
 load_dotenv(override=False)
