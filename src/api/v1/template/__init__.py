@@ -1,1 +1,1 @@
-from .router import router as template_routeur
+from .router import router as template_router
