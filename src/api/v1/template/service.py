@@ -1,7 +1,13 @@
-from src._database_pymysql import (
+from _database_pymysql import (
     MysqlClient,
-    NoConnectionError,
-    NoUpdateValuesError,
-    NoValueInsertionError,
+    MySqlNoConnectionError,
+    MySqlNoUpdateValuesError,
+    MySqlNoValueInsertionError,
+    MySqlWrongQueryError,
 )
-from src._exceptions import NotFoundException, WrongAttributesException
+from _exceptions import (
+    AlreadyExistsException,
+    NotFoundException,
+    WrongAttributesException,
+)
+from _github_api import GithubClient, GithubNoDataResponseError, GithubServerError

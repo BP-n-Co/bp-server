@@ -2,21 +2,21 @@ from datetime import datetime
 
 from pymysql.err import IntegrityError
 
-from src._config import DateTimeFormat, base_logger
-from src._database_pymysql import (
+from _config import DateTimeFormat, base_logger
+from _database_pymysql import (
     MysqlClient,
     MySqlNoConnectionError,
     MySqlNoUpdateValuesError,
     MySqlNoValueInsertionError,
     MySqlWrongQueryError,
 )
-from src._exceptions import (
+from _exceptions import (
     AlreadyExistsException,
     NotFoundException,
     WrongAttributesException,
 )
-from src._github_api import GithubClient, GithubNoDataResponseError, GithubServerError
-from src.models import Commit, GitUser, Repository
+from _github_api import GithubClient, GithubNoDataResponseError, GithubServerError
+from models import Commit, GitUser, Repository
 
 
 def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, object]:

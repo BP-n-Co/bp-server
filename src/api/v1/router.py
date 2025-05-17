@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from .repository import repository_routeur
+from .repositories import repositories_routeur
 
 router = APIRouter(prefix="/v1")
 
-router.include_router(repository_routeur)
+router.include_router(repositories_routeur)

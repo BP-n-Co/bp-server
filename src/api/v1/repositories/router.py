@@ -1,16 +1,14 @@
 import traceback
 
 from fastapi import APIRouter
-from pymysql.err import IntegrityError
 
-from _schemas import DataResponse, MessageResponse
-from src._database_pymysql import (
+from _database_pymysql import (
     MySqlNoConnectionError,
     MySqlNoUpdateValuesError,
     MySqlNoValueInsertionError,
     MySqlWrongQueryError,
 )
-from src._exceptions import (
+from _exceptions import (
     AlreadyExistsException,
     HTTPServerException,
     HTTPSNotFoundException,
@@ -19,8 +17,9 @@ from src._exceptions import (
     NotFoundException,
     WrongAttributesException,
 )
-from src._github_api import GithubNoDataResponseError, GithubServerError
-from src.models import Repository
+from _github_api import GithubNoDataResponseError, GithubServerError
+from _schemas import DataResponse, MessageResponse
+from models import Repository
 
 from .schema import RepositoryTrackInput
 from .service import add_repository, get_commits, get_repositories

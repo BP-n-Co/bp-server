@@ -1,16 +1,21 @@
 from fastapi import APIRouter
 
-from _schemas import DataResponse, MessageResponse
-from src._database_pymysql import (
-    NoConnectionError,
-    NoUpdateValuesError,
-    NoValueInsertionError,
+from _database_pymysql import (
+    MySqlNoConnectionError,
+    MySqlNoUpdateValuesError,
+    MySqlNoValueInsertionError,
+    MySqlWrongQueryError,
 )
-from src._exceptions import (
+from _exceptions import (
+    AlreadyExistsException,
+    HTTPServerException,
     HTTPSNotFoundException,
+    HTTPSqlmodelAlreadyExistsException,
     HTTPWrongAttributesException,
     NotFoundException,
     WrongAttributesException,
 )
+from _github_api import GithubNoDataResponseError, GithubServerError
+from _schemas import DataResponse, MessageResponse
 
-router = APIRouter(prefix="")
+router = APIRouter(prefix="/template")
