@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from _database_pymysql import (
     MySqlNoConnectionError,
@@ -64,9 +64,13 @@ def track_repository(repository_input: RepositoryTrackInput) -> DataResponse:
 
 
 @router.get("/commits", response_model=DataResponse)
-def fetch_commits(name: str, ownerId: str) -> DataResponse:
+def fetch_commits(repo_id: str = Query(...)) -> DataResponse:
+    if not repo_id:
+        raise HTTPWrongAttributesException(
+            detail="repo_id query parameter is required to be not null"
+        )
     try:
-        commits = get_commits(name=name, ownerId=ownerId)
+        commits = get_commits(repo_id=repo_id)
     except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
         raise HTTPServerException(detail=f"{type(e), str(e), {traceback.print_exc()}}")
     except WrongAttributesException as e:
