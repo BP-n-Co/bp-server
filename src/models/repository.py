@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import BOOLEAN, DATETIME, VARCHAR, ForeignKey
+from sqlalchemy import DATETIME, VARCHAR, ForeignKey
+from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import Mapped, mapped_column
 
 from _models import BaseModel
@@ -19,9 +20,9 @@ class Repository(BaseModel):
 
     createdAt: Mapped[datetime] = mapped_column(DATETIME(), nullable=False, index=True)
     rootCommitIsReached: Mapped[bool] = mapped_column(
-        BOOLEAN(), nullable=False, server_default="0", index=True
+        TINYINT(1), nullable=False, server_default="0", index=True
     )
-    isPrivate: Mapped[bool] = mapped_column(BOOLEAN(), nullable=False)
+    isPrivate: Mapped[bool] = mapped_column(TINYINT(1), nullable=False)
 
     trackedBranchName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
     trackedBranchRef: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
