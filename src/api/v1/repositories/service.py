@@ -153,38 +153,22 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
     return repo.to_dict()
 
 
-def get_commits(name: str, ownerId: str) -> list[dict[str, object]]:
+def get_commits(repo_id: str) -> list[dict[str, object]]:
     mysql_client = MysqlClient(logger=base_logger)
 
     def quit():
         mysql_client.close()
 
     try:
-        repo = mysql_client.select(
-            table_name=Repository.__tablename__,
-            select_col=["id"],
-            cond_eq={"name": name, "ownerId": ownerId},
-        )
-    except (MySqlNoConnectionError, MySqlWrongQueryError) as e:
-        quit()
-        raise e
-    if not repo:
-        quit()
-        raise WrongAttributesException(
-            "cannot fetch any repository, make sure to add it first on the repositories to track"
-        )
-
-    repo_id = repo[0]["id"]
-    try:
         commits = mysql_client.select(
             table_name=Commit.__tablename__,
             select_col=[
+                "id",
                 "additions",
                 "deletions",
                 "committedDate",
-                "committerAvatarUrl",
-                "committerEmail",
-                "committerName",
+                "authorAvatarUrl",
+                "authorName",
             ],
             cond_eq={"repositoryId": repo_id},
         )

@@ -13,10 +13,12 @@ class Commit(BaseModel):
     __tablename__ = "commit"
 
     id: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
-    oldId: Mapped[str] = mapped_column(VARCHAR(255), nullable=True, server_default=None)
+    oldId: Mapped[str] = mapped_column(
+        VARCHAR(255), nullable=True, server_default=None, index=True
+    )
 
     repositoryId: Mapped[str] = mapped_column(
-        VARCHAR(255), ForeignKey(Repository.id), nullable=False
+        VARCHAR(255), ForeignKey(Repository.id), nullable=False, index=True
     )
 
     additions: Mapped[int] = mapped_column(
@@ -26,7 +28,9 @@ class Commit(BaseModel):
         INTEGER(), nullable=False, server_default="0"
     )
 
-    authoredDate: Mapped[datetime] = mapped_column(DATETIME(), nullable=False)
+    authoredDate: Mapped[datetime] = mapped_column(
+        DATETIME(), nullable=False, index=True
+    )
     authorAvatarUrl: Mapped[str] = mapped_column(
         VARCHAR(4096), nullable=True, server_default=None
     )
@@ -40,7 +44,9 @@ class Commit(BaseModel):
     )
     authorName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
 
-    committedDate: Mapped[datetime] = mapped_column(DATETIME(), nullable=False)
+    committedDate: Mapped[datetime] = mapped_column(
+        DATETIME(), nullable=False, index=True
+    )
     committerAvatarUrl: Mapped[str] = mapped_column(
         VARCHAR(4096), nullable=True, server_default=None
     )
