@@ -64,7 +64,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: main
-          head: ${{ env.BRANCH_NAME }}
+          branch: ${{ env.BRANCH_NAME }}
           title: "Weekly Release: ${{ env.BRANCH_NAME }}"
           draft: true
           body: |
