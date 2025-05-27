@@ -36,18 +36,6 @@ jobs:
           COMMITS=$(git log origin/main..origin/develop --pretty=format:"%h %s" --reverse)
           echo "$COMMITS" > commits.txt
 
-          echo "Formatted checklist:"
-          echo "$COMMITS" | awk '
-            {
-              match($0, /\(#([0-9]+)\)/, pr);
-              if (pr[1] != "") {
-                printf "- [ ] #%s %s\n", pr[1], substr($0, index($0,$2))
-              } else {
-                printf "- [ ] %s\n", $0
-              }
-            }
-          ' > pr_checklist.md
-
       - name: Cherry-pick commits
         run: |
           while read -r line; do
@@ -59,21 +47,33 @@ jobs:
         run: |
           git push origin $BRANCH_NAME
 
-      - name: Create PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          head: ${{ env.BRANCH_NAME }}
-          title: "Weekly Release: ${{ env.BRANCH_NAME }}"
-          draft: true
-          body: |
-            ## 📦 Weekly Release PR
+      - name: Create PR body file
+        run: |
+          echo "## 📦 Weekly Release PR" > pr_body.md
+          echo "" >> pr_body.md
+          echo "This PR cherry-picks all squash-merged PRs from \`develop\` that are not yet in \`main\`." >> pr_body.md
+          echo "" >> pr_body.md
+          echo "Please review and **uncheck** anything that should **not** be released." >> pr_body.md
+          echo "You'll manually remove those commits before merging." >> pr_body.md
+          echo "" >> pr_body.md
+          echo "### ✅ Included PRs:" >> pr_body.md
+          awk '
+            {
+              match($0, /\(#([0-9]+)\)/, pr);
+              if (pr[1] != "") {
+                printf "- [ ] #%s %s\n", pr[1], substr($0, index($0,$2))
+              } else {
+                printf "- [ ] %s\n", $0
+              }
+            }
+          ' commits.txt >> pr_body.md
 
-            This PR cherry-picks all squash-merged PRs from `develop` that are not yet in `main`.
-
-            Please review and **uncheck** anything that should **not** be released.  
-            You'll manually remove those commits before merging.
-
-            ### ✅ Included PRs:
-            $(cat pr_checklist.md)
+      - name: Create PR using GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "Weekly Release: $BRANCH_NAME" \
+            --body-file pr_body.md \
+            --base main \
+            --head $BRANCH_NAME \
