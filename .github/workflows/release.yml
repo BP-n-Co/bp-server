@@ -65,17 +65,11 @@ jobs:
               # Extract commit message before the PR reference
               split($0, parts, /\s*\(#([0-9]+)\)/);
 
-              # Clean up the commit message: remove hash if still present
-              gsub(/^[0-9a-f]{7,} /, "", parts[1]);  # remove leading short hash
-
-              # Remove repeated PR number like "#38 ..." if exists again
-              sub(/#[0-9]+\s*/, "", parts[1]);
-
               # Trim leading spaces
               sub(/^[ \t]+/, "", parts[1]);
 
               if (pr[1] != "") {
-                printf "- [ ] #%s %s\n", pr[1], parts[1];
+                printf "- [ ] #%s \n", pr[1];
               } else {
                 printf "- [ ] %s\n", parts[1];
               }
