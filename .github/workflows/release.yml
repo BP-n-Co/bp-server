@@ -65,8 +65,11 @@ jobs:
               # Extract commit message before the PR reference
               split($0, parts, /\s*\(#([0-9]+)\)/);
 
-              # Remove the commit hash (first word)
-              $1 = "";
+              # Clean up the commit message: remove hash if still present
+              gsub(/^[0-9a-f]{7,} /, "", parts[1]);  # remove leading short hash
+
+              # Remove repeated PR number like "#38 ..." if exists again
+              sub(/#[0-9]+\s*/, "", parts[1]);
 
               # Trim leading spaces
               sub(/^[ \t]+/, "", parts[1]);
