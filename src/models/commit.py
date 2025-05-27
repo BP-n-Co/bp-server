@@ -1,6 +1,9 @@
-from sqlalchemy import DATETIME, INTEGER, VARCHAR, Column, ForeignKey
+from datetime import datetime
 
-from src._models import BaseModel
+from sqlalchemy import DATETIME, INTEGER, VARCHAR, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
+
+from _models import BaseModel
 
 from .git_user import GitUser
 from .repository import Repository
@@ -9,33 +12,50 @@ from .repository import Repository
 class Commit(BaseModel):
     __tablename__ = "commit"
 
-    id = Column(VARCHAR(255), primary_key=True)
+    id: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
+    oldId: Mapped[str] = mapped_column(
+        VARCHAR(255), nullable=True, server_default=None, index=True
+    )
 
-    repositoryId = Column(VARCHAR(255), ForeignKey(Repository.id), nullable=False)
+    repositoryId: Mapped[str] = mapped_column(
+        VARCHAR(255), ForeignKey(Repository.id), nullable=False, index=True
+    )
 
-    addition = Column(INTEGER(), nullable=False, server_default="0")
-    deletion = Column(INTEGER(), nullable=False, server_default="0")
+    additions: Mapped[int] = mapped_column(
+        INTEGER(), nullable=False, server_default="0"
+    )
+    deletions: Mapped[int] = mapped_column(
+        INTEGER(), nullable=False, server_default="0"
+    )
 
-    authoredDate = Column(DATETIME(), nullable=False)
-    authorAvatarUrl = Column(VARCHAR(4096), nullable=True, server_default=None)
-    authorEmail = Column(VARCHAR(255), nullable=False)
-    authorId = Column(
+    authoredDate: Mapped[datetime] = mapped_column(
+        DATETIME(), nullable=False, index=True
+    )
+    authorAvatarUrl: Mapped[str] = mapped_column(
+        VARCHAR(4096), nullable=True, server_default=None
+    )
+    authorEmail: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    authorId: Mapped[str] = mapped_column(
         VARCHAR(255),
         ForeignKey(GitUser.id),
         index=True,
         nullable=True,
         server_default=None,
     )
-    authorName = Column(VARCHAR(255), nullable=False)
+    authorName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
 
-    committedDate = Column(DATETIME(), nullable=False)
-    committerAvatarUrl = Column(VARCHAR(4096), nullable=True, server_default=None)
-    committerEmail = Column(VARCHAR(255), nullable=False)
-    committerId = Column(
+    committedDate: Mapped[datetime] = mapped_column(
+        DATETIME(), nullable=False, index=True
+    )
+    committerAvatarUrl: Mapped[str] = mapped_column(
+        VARCHAR(4096), nullable=True, server_default=None
+    )
+    committerEmail: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    committerId: Mapped[str] = mapped_column(
         VARCHAR(255),
         ForeignKey(GitUser.id),
         index=True,
         nullable=True,
         server_default=None,
     )
-    committerName = Column(VARCHAR(255), nullable=False)
+    committerName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)

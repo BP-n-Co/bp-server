@@ -10,7 +10,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - database:/var/lib/mysql
+      - ./.db:/var/lib/mysql
 
   migrator:
     build:
@@ -27,9 +27,8 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/DockerfileLocal
     environment:
-      PYTHONPATH: "/app"
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       UVICORN_MODE_DEBUG: False
@@ -37,7 +36,4 @@ services:
       - migrator
     ports:
       - "${APP_PORT}:${APP_PORT}"
-    entrypoint: ["python3", "-m", "src.main"]
-
-volumes:
-  database:
+    entrypoint: ["python3", "src/main.py"]

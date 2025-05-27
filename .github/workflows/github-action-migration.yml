@@ -1,4 +1,4 @@
-name: Migrate using Amazon ECS
+name: Migrate DB (ECS task)
 
 on:
   workflow_dispatch:
@@ -38,41 +38,20 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
 
+      - name: Get latest revision of task definition
+        id: latest-task-def
+        run: |
+          LATEST_TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition ${{ vars.ECS_MIGRATION_TASK_DEFINITION }} \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+          echo "LATEST_TASK_DEF=$LATEST_TASK_DEF" >> $GITHUB_ENV
+
       - name: Run ECS migration task
         run: |
           aws ecs run-task \
             --cluster ${{ vars.ECS_CLUSTER }} \
-            --capacity-provider-strategy '[{"capacityProvider" : "capacity-provider"}]' \
-            --task-definition ${{ vars.ECS_MIGRATION_TASK_DEFINITION }} \
+            --capacity-provider-strategy '[{"capacityProvider" : "${{ vars.CAPACITY_PROVIDER }}"}]' \
+            --task-definition $LATEST_TASK_DEF \
             --count 1 \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_ID }}],securityGroups=[${{ secrets.DB_SECURITY_GROUP_ID }}]}" \
-            --overrides '{ 
-              "containerOverrides": [ 
-                { 
-                  "name": "migration-container", 
-                  "environment": [ 
-                    { 
-                      "name": "MYSQL_USER", 
-                      "value": "${{ secrets.MYSQL_USERNAME_MIGRATION }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PASSWORD", 
-                      "value": "${{ secrets.MYSQL_PASSWORD_MIGRATION }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_HOST", 
-                      "value": "${{ secrets.MYSQL_HOST }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_PORT", 
-                      "value": "${{ secrets.MYSQL_PORT }}" 
-                    }, 
-                    { 
-                      "name": "MYSQL_DATABASE", 
-                      "value": "${{ secrets.MYSQL_DATABASE }}" 
-                    } 
-                  ] 
-                } 
-              ], 
-              "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecs-role" 
-            }'
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_CLUSTER_SUBNETID1 }}, ${{ secrets.AWS_CLUSTER_SUBNETID2 }}, ${{ secrets.AWS_CLUSTER_SUBNETID3 }}],securityGroups=[${{ secrets.MIGRATION_SECURITY_GROUP_ID }}]}" \
