@@ -4,8 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from _models import BaseModel
 
 
-class GitUser(BaseModel):
-    __tablename__ = "git_user"
+class GitOrganization(BaseModel):
+    __tablename__ = "git_organization"
 
     id: Mapped[str] = mapped_column(VARCHAR(255), primary_key=True)
     oldId: Mapped[str] = mapped_column(

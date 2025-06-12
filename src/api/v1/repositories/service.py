@@ -17,7 +17,7 @@ from _exceptions import (
     WrongAttributesException,
 )
 from _github_api import GithubClient, GithubNoDataResponseError, GithubServerError
-from models import Commit, GitUser, Repository
+from models import Commit, GitOrganization, GitUser, Repository
 
 
 def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, object]:
@@ -56,11 +56,21 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
     repo = Repository(
         id=repo_info["id"],
         name=name,
-        ownerId=repo_info["owner"]["id"],
+        ownerIsOrganization=str(repo_info["owner"]["id"]).startswith("O_"),
+        ownerIdUser=(
+            repo_info["owner"]["id"]
+            if str(repo_info["owner"]["id"]).startswith("U_")
+            else None
+        ),
+        ownerIdOrganization=(
+            repo_info["owner"]["id"]
+            if str(repo_info["owner"]["id"]).startswith("O_")
+            else None
+        ),
         isPrivate=repo_info["isPrivate"] == "True",
         createdAt=datetime.strptime(repo_info["createdAt"], DateTimeFormat.github),
     )
-    base_logger.debug(f"created object {repo=}")
+    base_logger.debug(f"created object {repo.to_dict()=}")
 
     # 1.2 Check if branch is valid
     base_logger.debug(f"checking if {branch_name=} is a valid branch")
@@ -97,47 +107,63 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
 
     ## 2. Add user in DB
     # 2.1 Get user info
-    base_logger.debug(f"trying to get github user info from github")
+    base_logger.debug(f"trying to get github owner info from github")
+    owner_id = (
+        repo.ownerIdOrganization if repo.ownerIsOrganization else repo.ownerIdUser
+    )
     query = f"""
     query {{
-        node(id: "{str(repo.ownerId)}") {{
-            ... on User {{
+        node(id: "{owner_id}") {{
+            ... on {"Organization" if repo.ownerIsOrganization else "User"} {{
                 avatarUrl
                 email
-                name
+                id
                 login
+                name
             }}
         }}
     }}
     """
     try:
-        user_info = github_client.graphql_post(query=query)["node"]
+        owner_info = github_client.graphql_post(query=query)["node"]
     except (GithubServerError, GithubNoDataResponseError):
         base_logger.warning(
-            f"Error while fetching Github with {repo.ownerId=}, {traceback.format_exc()}"
+            f"Error while fetching Github with ownerId={owner_id=}, {traceback.format_exc()}"
         )
         raise
-    if not user_info:
-        message = f"could not retreive any user info for {repo.ownerId=}"
+    if not owner_info:
+        message = f"could not retreive any user info for {owner_id=}"
         base_logger.warning(message)
         raise WrongAttributesException(message)
-    github_user = GitUser(
-        id=str(repo.ownerId),
-        avatarUrl=user_info["avatarUrl"],
-        email=user_info["email"],
-        name=user_info["name"],
-        login=user_info["login"],
-    )
-    base_logger.debug(f"got {github_user=}")
+
+    if repo.ownerIsOrganization:
+        github_owner = GitOrganization(
+            id=owner_info["id"],
+            avatarUrl=owner_info["avatarUrl"],
+            email=owner_info["email"],
+            name=owner_info["name"],
+            login=owner_info["login"],
+        )
+    else:
+        github_owner = GitUser(
+            id=owner_info["id"],
+            avatarUrl=owner_info["avatarUrl"],
+            email=owner_info["email"],
+            name=owner_info["name"],
+            login=owner_info["login"],
+        )
+    base_logger.debug(f"got {github_owner.to_dict()=}")
 
     # 2.2 Add user if not present
     base_logger.debug(f"adding github user in database")
     try:
-        if not mysql_client.id_exists(
-            table_name=GitUser.__tablename__, id=str(github_user.id)
-        ):
+        if repo.ownerIsOrganization:
             mysql_client.insert_one(
-                table_name=GitUser.__tablename__, values=github_user.to_dict()
+                table_name=GitOrganization.__tablename__, values=github_owner.to_dict()
+            )
+        else:
+            mysql_client.insert_one(
+                table_name=GitUser.__tablename__, values=github_owner.to_dict()
             )
     except (
         MySqlNoConnectionError,
@@ -145,13 +171,13 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
         MySqlNoValueInsertionError,
     ):
         base_logger.warning(
-            f"Error when adding {github_user=} to bd {traceback.format_exc()}"
+            f"Error when adding {github_owner=} to bd {traceback.format_exc()}"
         )
         raise
-    base_logger.debug(f"successfuly added / updated {github_user=}")
+    base_logger.debug(f"successfuly added {github_owner.to_dict()=}")
 
     # 3. Add repo in DB
-    base_logger.debug(f"trying to add {repo=} in db, {repo=}")
+    base_logger.debug(f"trying to add repo in db, {repo.to_dict()=}")
     try:
         mysql_client.insert_one(
             table_name=Repository.__tablename__, values=repo.to_dict()
@@ -167,7 +193,7 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
         raise
     except IntegrityError as e:
         raise AlreadyExistsException(table_name=Repository.__tablename__, detail=str(e))
-    base_logger.debug(f"successfully added to db {repo=}")
+    base_logger.debug(f"successfully added to db {repo.to_dict()=}")
 
     # 4. Return created one
     return repo.to_dict()
@@ -206,7 +232,14 @@ def get_repositories() -> list[dict[str, object]]:
 
     try:
         repos = mysql_client.select(
-            table_name=Repository.__tablename__, select_col=["id", "ownerId", "name"]
+            table_name=Repository.__tablename__,
+            select_col=[
+                "id",
+                "name",
+                "ownerIdUser",
+                "ownerIdOrganization",
+                "ownerIsOrganization",
+            ],
         )
     except (MySqlNoConnectionError, MySqlWrongQueryError):
         base_logger.warning(
@@ -218,11 +251,18 @@ def get_repositories() -> list[dict[str, object]]:
     for repo in repos:
         base_logger.debug(f"fetching user from db for {repo=}")
         try:
-            owner = mysql_client.select_by_id(
-                table_name=GitUser.__tablename__,
-                id=str(repo["ownerId"]),
-                select_col=["login"],
-            )
+            if repo["ownerIsOrganization"]:
+                owner = mysql_client.select_by_id(
+                    table_name=GitOrganization.__tablename__,
+                    id=str(repo["ownerIdOrganization"]),
+                    select_col=["login"],
+                )
+            else:
+                owner = mysql_client.select_by_id(
+                    table_name=GitUser.__tablename__,
+                    id=str(repo["ownerIdUser"]),
+                    select_col=["login"],
+                )
         except (MySqlNoConnectionError, MySqlWrongQueryError):
             base_logger.warning(
                 f"Error when fetching db for github user, {traceback.format_exc()}"

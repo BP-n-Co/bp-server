@@ -25,11 +25,17 @@ class GithubClient:
     def close(self):
         self.session.close()
 
-    def graphql_post(self, query: str) -> dict:
+    def graphql_post(self, query: str, silent=False) -> dict:
+        if not silent:
+            self.logger.debug(f"posting to github {query=}")
         headers = {"Authorization": f"token {self.token}"}
         resp = self.session.post(
             url="https://api.github.com/graphql", headers=headers, json={"query": query}
         )
+
+        if not silent:
+            self.logger.debug(f"got from github {resp.content=}")
+
         if not resp.status_code == 200:
             message = f"could not get response from Github {resp.status_code=}."
             self.logger.warning(message)

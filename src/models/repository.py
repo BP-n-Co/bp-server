@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from _models import BaseModel
 
+from .git_organization import GitOrganization
 from .git_user import GitUser
 
 
