@@ -28,6 +28,7 @@ class GithubClient:
     def graphql_post(self, query: str, silent=False) -> dict:
         if not silent:
             self.logger.debug(f"posting to github {query=}")
+
         headers = {"Authorization": f"token {self.token}"}
         resp = self.session.post(
             url="https://api.github.com/graphql", headers=headers, json={"query": query}
