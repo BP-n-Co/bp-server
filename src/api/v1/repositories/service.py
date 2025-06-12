@@ -133,12 +133,11 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
     # 2.2 Add user if not present
     base_logger.debug(f"adding github user in database")
     try:
-        if not mysql_client.id_exists(
-            table_name=GitUser.__tablename__, id=str(github_user.id)
-        ):
-            mysql_client.insert_one(
-                table_name=GitUser.__tablename__, values=github_user.to_dict()
-            )
+        mysql_client.insert_one(
+            table_name=GitUser.__tablename__,
+            values=github_user.to_dict(),
+            or_ignore=True,
+        )
     except (
         MySqlNoConnectionError,
         MySqlWrongQueryError,
@@ -148,7 +147,7 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
             f"Error when adding {github_user=} to bd {traceback.format_exc()}"
         )
         raise
-    base_logger.debug(f"successfuly added / updated {github_user=}")
+    base_logger.debug(f"successfuly added {github_user=}")
 
     # 3. Add repo in DB
     base_logger.debug(f"trying to add {repo=} in db, {repo=}")
