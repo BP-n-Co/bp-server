@@ -128,7 +128,7 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
         owner_info = github_client.graphql_post(query=query)["node"]
     except (GithubServerError, GithubNoDataResponseError):
         base_logger.warning(
-            f"Error while fetching Github with ownerId={owner_id=}, {traceback.format_exc()}"
+            f"Error while fetching Github with {owner_id=}, {traceback.format_exc()}"
         )
         raise
     if not owner_info:
@@ -159,11 +159,15 @@ def add_repository(name: str, owner_login: str, branch_name: str) -> dict[str, o
     try:
         if repo.ownerIsOrganization:
             mysql_client.insert_one(
-                table_name=GitOrganization.__tablename__, values=github_owner.to_dict()
+                table_name=GitOrganization.__tablename__,
+                values=github_owner.to_dict(),
+                or_ignore=True,
             )
         else:
             mysql_client.insert_one(
-                table_name=GitUser.__tablename__, values=github_owner.to_dict()
+                table_name=GitUser.__tablename__,
+                values=github_owner.to_dict(),
+                or_ignore=True,
             )
     except (
         MySqlNoConnectionError,
