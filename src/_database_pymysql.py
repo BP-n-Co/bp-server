@@ -216,7 +216,7 @@ class MysqlClient:
             self.execute(query=query, silent=silent)
         except MySqlWrongQueryError as e:
             self.logger.warning(
-                f"wrong query when update by id, {traceback.format_exc()}"
+                f"wrong query when updating by id, {traceback.format_exc()}"
             )
             raise e
         self.connection.commit()  # type: ignore
@@ -532,7 +532,7 @@ class MysqlClient:
         silent : bool, optional
             If True, suppress logging of the query execution, by default False
         or_ignore : bool, optional
-            If True, use INSERT IGNORE, default False. Both or_ignore and or_update cannot be True at the same time
+            If True, use INSERT IGNORE, default False
 
         Raises
         ------
@@ -715,7 +715,7 @@ class MysqlClient:
             )
         except MySqlWrongQueryError as e:
             self.logger.warning(
-                f"wrong query when updating by id,{traceback.format_exc()}"
+                f"wrong query when updating by id, {traceback.format_exc()}"
             )
             raise e
         return mysql_res[0] if mysql_res else dict()
