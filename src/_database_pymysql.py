@@ -1,3 +1,4 @@
+## TODO: Migrate to other than pymysql to support async
 import traceback
 from logging import Logger
 
