@@ -6,6 +6,14 @@ else
   echo "Docker Compose is not running"
 fi
 
+if [ -d ".db" ]; then
+  echo "Removing current database"
+  rm -rd ".db"
+else
+  echo "No previous db founded"
+fi
+
+
 echo "Grabing latest mock database"
 cp -r .db_example .db
 
