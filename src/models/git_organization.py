@@ -16,5 +16,5 @@ class GitOrganization(BaseModel):
         VARCHAR(4096), nullable=True, server_default=None
     )
     email: Mapped[str] = mapped_column(VARCHAR(255), nullable=True, server_default=None)
-    name: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    name: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
     login: Mapped[str] = mapped_column(VARCHAR(255), nullable=False, index=True)
