@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from _models import BaseModel
 
+from .git_organization import GitOrganization
 from .git_user import GitUser
 
 
@@ -26,10 +27,21 @@ class Repository(BaseModel):
 
     trackedBranchName: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
     trackedBranchRef: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
-    ownerId: Mapped[str] = mapped_column(
+
+    ownerIsOrganization: Mapped[bool] = mapped_column(
+        TINYINT(1), nullable=False, index=True
+    )
+    ownerIdUser: Mapped[str] = mapped_column(
         VARCHAR(255),
         ForeignKey(GitUser.id),
+        nullable=True,
         index=True,
-        nullable=False,
+        server_default=None,
+    )
+    ownerIdOrganization: Mapped[str] = mapped_column(
+        VARCHAR(255),
+        ForeignKey(GitOrganization.id),
+        nullable=True,
+        index=True,
         server_default=None,
     )

@@ -37,6 +37,7 @@ jobs:
           docker build -f docker/DockerfileAws -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:snapshot-$GIT_SHA
+<<<<<<< HEAD
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Get current task definition JSON
@@ -74,8 +75,16 @@ jobs:
           echo "NEW_TASK_DEF_ARN=$NEW_TASK_DEF_ARN" >> $GITHUB_ENV
 
       - name: Update ECS service to use new task definition
+=======
+
+      - name: Update ECS service to force new deployment
+>>>>>>> develop
         run: |
           aws ecs update-service \
             --cluster ${{ vars.ECS_CLUSTER }} \
             --service ${{ vars.ECS_SERVICE_NAME_BACKEND }} \
+<<<<<<< HEAD
             --task-definition $NEW_TASK_DEF_ARN
+=======
+            --force-new-deployment
+>>>>>>> develop
