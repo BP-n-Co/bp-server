@@ -2,6 +2,6 @@ from pydantic import BaseModel
 
 
 class RepositoryTrackInput(BaseModel):
-    owner_login: str
+    owner: str
     name: str
-    branch_name: str
+    branch: str

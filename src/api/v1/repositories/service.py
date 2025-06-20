@@ -46,21 +46,14 @@ async def add_repository(
         message = f"could not retreive any repository info for {name=}, {owner_login=}"
         base_logger.warning(message)
         raise WrongAttributesException(message)
+    is_organization = github_client.is_organization(login=str(repo_info["owner"]["id"]))
 
     repo = Repository(
         id=repo_info["id"],
         name=name,
-        ownerIsOrganization=str(repo_info["owner"]["id"]).startswith("O_"),
-        ownerIdUser=(
-            repo_info["owner"]["id"]
-            if str(repo_info["owner"]["id"]).startswith("U_")
-            else None
-        ),
-        ownerIdOrganization=(
-            repo_info["owner"]["id"]
-            if str(repo_info["owner"]["id"]).startswith("O_")
-            else None
-        ),
+        ownerIsOrganization=is_organization,
+        ownerIdOrganization=(repo_info["owner"]["id"] if is_organization else None),
+        ownerIdUser=(repo_info["owner"]["id"] if not is_organization else None),
         isPrivate=repo_info["isPrivate"] == "True",
         createdAt=datetime.strptime(repo_info["createdAt"], DateTimeFormat.github),
     )

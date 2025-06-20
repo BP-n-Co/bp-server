@@ -45,8 +45,8 @@ async def track_repository(repository_input: RepositoryTrackInput) -> DataRespon
     try:
         repo = await add_repository(
             name=repository_input.name,
-            owner_login=repository_input.owner_login,
-            branch_name=repository_input.branch_name,
+            owner_login=repository_input.owner,
+            branch_name=repository_input.branch,
         )
     except AlreadyExistsException as e:
         raise HTTPSqlmodelAlreadyExistsException(

@@ -52,3 +52,16 @@ class GithubClient:
             self.logger.warning(message)
             raise GithubNoDataResponseError(detail=message)
         return resp_dict["data"]
+
+    def is_organization(self, login: str, silent=False) -> bool:
+        query = f"""
+            query {{
+                node(id: "{login}") {{
+                    ... on Organization {{
+                        id
+                    }}
+                }}
+            }}
+        """
+        resp = self.graphql_post(query=query, silent=silent)
+        return bool(resp["node"])
